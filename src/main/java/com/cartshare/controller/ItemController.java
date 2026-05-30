@@ -1,11 +1,11 @@
 package com.cartshare.controller;
 
+import com.cartshare.dto.ItemRequestDTO;
 import com.cartshare.model.Item;
 import com.cartshare.model.ItemStatus;
 import com.cartshare.repository.ItemRepository;
 import com.cartshare.service.ItemService;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -23,17 +23,15 @@ public class ItemController {
     }
 
     @PostMapping("/add")
-    public Item addItem(@RequestBody Item item) {
-        return itemRepository.save(item);
+    public Item addItem(@RequestBody ItemRequestDTO itemDto) {
+        return itemService.createItem(itemDto);
     }
 
-    // Fetches either active Groceries OR active Bills based on the boolean flag
     @GetMapping("/household/{householdId}/active")
     public List<Item> getActiveItems(@PathVariable Long householdId, @RequestParam boolean isBill) {
         return itemRepository.findByHouseholdIdAndIsBillAndStatusNot(householdId, isBill, ItemStatus.PURCHASED);
     }
 
-    // Fetches the History log
     @GetMapping("/household/{householdId}/history")
     public List<Item> getHistory(@PathVariable Long householdId) {
         return itemRepository.findByHouseholdIdAndStatus(householdId, ItemStatus.PURCHASED);

@@ -1,23 +1,45 @@
 package com.cartshare.service;
 
+import com.cartshare.dto.ItemRequestDTO; // 1. Added this missing import!
 import com.cartshare.model.Item;
 import com.cartshare.model.ItemStatus;
 import com.cartshare.model.User;
+import com.cartshare.repository.HouseholdRepository;
 import com.cartshare.repository.ItemRepository;
 import com.cartshare.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 public class ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final HouseholdRepository householdRepository;
 
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, HouseholdRepository householdRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.householdRepository = householdRepository;
+    }
+
+    public Item createItem(ItemRequestDTO dto) {
+        Item item = new Item();
+        item.setName(dto.getName());
+        item.setBill(dto.isBill()); // 2. Fixed from setIsBill to setBill (Lombok style)
+        item.setQuantity(dto.getQuantity());
+        item.setStatus(ItemStatus.PENDING);
+        item.setCreatedAt(LocalDateTime.now());
+
+        // Map IDs to Entities
+        item.setHousehold(householdRepository.findById(dto.getHouseholdId())
+                .orElseThrow(() -> new RuntimeException("Household not found")));
+        item.setAddedBy(userRepository.findById(dto.getAddedByUserId())
+                .orElseThrow(() -> new RuntimeException("User not found")));
+
+        return itemRepository.save(item);
     }
 
     // 1. Claim an item ("I've got it!")
